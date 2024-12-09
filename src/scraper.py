@@ -8,8 +8,8 @@ import time
 
 
 # Supabase credentials
-SUPABASE_URL = "your_supabase_url"
-SUPABASE_KEY = "your_supabase_api_key"
+SUPABASE_URL = "https://uwojzbfudctcpvgpqrda.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3b2p6YmZ1ZGN0Y3B2Z3BxcmRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwODEwMTcyNiwiZXhwIjoyMDIzNjc3NzI2fQ.-pkEClC2MsQWN1Vt10N4KSV3QVMISLmh233zS3EZoNE"
 
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -23,7 +23,7 @@ url = 'https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html'
 driver.get(url)
 
 # Wait for the page to load
-time.sleep(5)  # Adjust based on the page loading time
+time.sleep(5)  
 
 # Parse the page content
 soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -59,6 +59,12 @@ if chart_div:
             if 'Flights' in row:
                 row['Flights'] = row['Flights'].replace(",", ".")
             row['Date'] = yesterday
+            # Aggregate Daily flights
+            daily_flights = row['Flights'].resample('D').sum().reset_index()
+            
+            print("Daily flights:\n", daily_flights)
+            
+            row['Date'] = daily_flights
             row['Emission'] = row['Flights'] * 4.88 #emission 
 
         # Insert data into Supabase
