@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from supabase import create_client, Client
 import time
-
+import pandas as pd
 
 # Supabase credentials
 SUPABASE_URL = "https://uwojzbfudctcpvgpqrda.supabase.co"
@@ -23,7 +23,7 @@ url = 'https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html'
 driver.get(url)
 
 # Wait for the page to load
-time.sleep(5)  
+time.sleep(5)  # Adjust based on the page loading time
 
 # Parse the page content
 soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -45,35 +45,63 @@ if chart_div:
             rows.append(row_data)
 
         # Filter the rows by country
-        allowed_countries = [
-            'Austria', 'Belgium', 'Bulgaria', 'Czech Republic', 'Denmark', 'Germany', 'Greece', 'Estonia', 'Spain', 'Finland', 'France', 'Cyprus', 'Croatia', 
-            'Hungary', 'Ireland', 'Italy', 'Lithuania', 'Luxembourg', 'Latvia', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Sweden', 'Slovenia', 
-            'Slovakia', 'Malta'
-        ]
-        filtered_rows = [row for row in rows if row.get('Entity') in allowed_countries]
+        Countries = [
+            'Austria', 'Belgium', 'Bulgaria', 'Czech Republic', 'Denmark', 'Germany', 'Greece', 'Estonia', 'Spain', 'Finland', 'France', 'Cyprus', 'Croatia',
+            'Hungary', 'Ireland', 'Italy', 'Lithuania', 'Luxembourg', 'Latvia', 'Netherlands', 'Poland', 'Portugal', 'Romania', 'Sweden', 'Slovenia',
+            'Slovakia', 'Malta']
 
-        # Add yesterday's date to each row and format the Flights column
+        filtered_rows = [row for row in rows if row.get('Entity') in Countries]
+
+        # Process the rows
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        processed_rows = []
         for row in filtered_rows:
-            # Format Flights column
             if 'Flights' in row:
-                row['Flights'] = row['Flights'].replace(",", ".")
-            row['Date'] = yesterday
-            # Aggregate Daily flights
-            daily_flights = row['Flights'].resample('D').sum().reset_index()
+                row['Flights'] = float(row['Flights'].replace(",", "."))
             
-            print("Daily flights:\n", daily_flights)
-            
-            row['Date'] = daily_flights
-            row['Emission'] = row['Flights'] * 4.88 #emission 
+            processed_row = {
+                'Date': yesterday,
+                'Entity': row['Entity'],
+                'Flights': row['Flights'],
+                'Emission': row['Flights'] * 4.88  # Example factor
+            }
+
+            processed_rows.append(processed_row)
+
+        # Convert to a DataFrame for aggregation
+        df = pd.DataFrame(processed_rows)
+
+        # Aggregate flights and emissions for EU27
+        daily_aggregates = df.groupby('Date').agg(
+            Flights=('Flights', 'sum'),
+            Emission=('Emission', 'sum')
+        ).reset_index()
+        daily_aggregates['Entity'] = 'EU27'
+
+        # Add EU27 data to the original processed rows
+        for _, agg_row in daily_aggregates.iterrows():
+            processed_rows.append({
+                'Date': agg_row['Date'],  # Changed from 'Day' to 'Date'
+                'Entity': agg_row['Entity'],
+                'Flights': agg_row['Flights'],
+                'Emission': agg_row['Emission']
+            })
+
+        # See final results
+        print("\nFinal Results (Processed Rows):")
+        for row in processed_rows:
+            print(row)
 
         # Insert data into Supabase
-        for row in filtered_rows:
-            response = supabase.table('aviation_emission').insert(row).execute()
-            if response.get('error'):
-                print(f"Error inserting row: {response['error']}")
-            else:
-                print(f"Inserted row: {row}")
+        for row in processed_rows:
+            try:
+                response = supabase.table('aviation_emission').insert(row).execute()
+                if response.data :
+                    print(f"Inserted row: {row}")
+                else:
+                    print(f"Error inserting batch: {response}")
+            except Exception as e:
+                print(f"Error inserting batch: {e}")
     else:
         print("Table not found inside chart_div.")
 else:
@@ -81,4 +109,3 @@ else:
 
 # Close the WebDriver session
 driver.quit()
-
