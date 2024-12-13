@@ -1,14 +1,15 @@
-from selenium import webdriver
-from selenium.webdriver.edge.service import Service as EdgeService
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from selenium.webdriver.edge.options import Options
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from supabase import create_client, Client
 import time 
 import pandas as pd
 from dotenv import load_dotenv
 import os
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.edge.service import Service as EdgeService
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from selenium.webdriver.edge.options import Options
+from datetime import datetime, timedelta
+from supabase import create_client, Client
+
 
 # Supabase credentials
 load_dotenv()
