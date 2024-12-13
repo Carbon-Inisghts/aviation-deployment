@@ -7,10 +7,14 @@ from datetime import datetime, timedelta
 from supabase import create_client, Client
 import time 
 import pandas as pd
+from dotenv import load_dotenv
+import os
 
 # Supabase credentials
-SUPABASE_URL = "https://uwojzbfudctcpvgpqrda.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3b2p6YmZ1ZGN0Y3B2Z3BxcmRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwODEwMTcyNiwiZXhwIjoyMDIzNjc3NzI2fQ.-pkEClC2MsQWN1Vt10N4KSV3QVMISLmh233zS3EZoNE"
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) 
 
 # Set up WebDriver
