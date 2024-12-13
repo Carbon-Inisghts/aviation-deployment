@@ -1,20 +1,24 @@
 from selenium import webdriver
 from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from selenium.webdriver.edge.options import Options
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from supabase import create_client, Client
-import time
+import time 
 import pandas as pd
 
 # Supabase credentials
 SUPABASE_URL = "https://uwojzbfudctcpvgpqrda.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3b2p6YmZ1ZGN0Y3B2Z3BxcmRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwODEwMTcyNiwiZXhwIjoyMDIzNjc3NzI2fQ.-pkEClC2MsQWN1Vt10N4KSV3QVMISLmh233zS3EZoNE"
-
-# Initialize Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) 
 
 # Set up WebDriver
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 service = EdgeService(EdgeChromiumDriverManager().install())
 driver = webdriver.Edge(service=service)
 
@@ -22,8 +26,7 @@ driver = webdriver.Edge(service=service)
 url = 'https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html'
 driver.get(url)
 
-# Wait for the page to load
-time.sleep(5)  # Adjust based on the page loading time
+time.sleep(5) # Wait for the page to load
 
 # Parse the page content
 soup = BeautifulSoup(driver.page_source, 'html.parser')
